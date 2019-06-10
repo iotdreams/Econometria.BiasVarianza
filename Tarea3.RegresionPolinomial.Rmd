@@ -1,0 +1,134 @@
+Laboratorio de R.
+Erick J. Pineda Amézquita
+
+
+
+Ejercicio 1
+Crear una función que calcule la varianza.
+Inputs
+??? Un dataset
+??? La fórmula de la regresión lineal
+??? El numero de boots
+??? El tamaño de cada muestra
+Outputs
+??? La varianza
+varianza(df,formula,B,n)
+
+
+Ejercicio 2
+Crear una función que calcule el sesgo
+Inputs
+??? Un dataset
+??? La fórmula de la regresión lineal
+??? El numero de boots
+??? El tamaño de cada muestra
+Outputs
+??? El sesgo
+sesgo(df,formula,B,n)
+
+
+Ejercicio 3
+Definir la complejidad como el grado del polinomio utilizando solamente una variable de input,
+hacer la siguiente gráfica.
+
+
+Ejercicio 4
+Calcular la varianza y el sesgo de diferentes combinaciones de la variables de input y
+determinar cuál es el modelo que tiene el mejor balance entre sesgo y varianza.
+
+
+
+
+CARGA DE LIBRERIAS
+```{r}
+library(ISLR)
+library(dplyr)
+library(ggplot2)
+
+glimpse(Boston)
+
+boston.reduce <-
+ Boston %>%
+  dplyr::select(lstat, medv)
+
+
+## Se utilizarán los datos de Boston
+know_data <- Boston %>% 
+  dplyr::select(lstat,medv)
+
+
+names(know_data)[1] <- "input"
+names(know_data)[2] <- "output"
+
+know_data.rows <- nrow(know_data)
+
+
+get_boot <- function(x2){
+  index<-sample(1:know_data.rows, 
+                size = know_data.rows, 
+                replace = TRUE)
+  
+  return(know_data[index,])
+}
+
+
+  
+
+fit_lm <- function(dataset,degree=2){
+  formula <- paste0("I(","input^",1:degree,")",collapse = '+')
+  formula <- paste0("output ~ ",formula)
+  fit <- lm(formula,data = dataset)
+  return(fit)
+}
+
+
+model_plot_data <- function(fit){
+  xaxis<-
+  seq(
+  min(know_data$input),
+  max(know_data$input),
+  by=0.01)
+  
+  
+  
+  yaxis<-predict(fit,tibble(input=xaxis))
+  
+  
+  return(tibble(input=xaxis,output=yaxis))
+}
+
+
+nboots<-100
+boots <- lapply(1:nboots, get_boot)
+
+
+all.models <-
+lapply(boots, fit_lm, degree=45)
+
+all.model.prediction <-
+  lapply(all.models, model_plot_data)
+
+
+plot(know_data, pch=20, cex=0.25)
+
+for(i in 1:nboots){
+  print(i)
+  points(all.model.prediction[[i]],col='gray',type='l')
+}
+
+df <- bind_rows(all.model.prediction,.id = "boot")
+
+mean_pred <-
+  df %>% 
+  group_by(input) %>% 
+  summarise(avg_pred=mean(output))
+
+points(mean_pred,type = 'l', col='red')
+
+fit.global<-fit_lm(know_data,40)
+plot.global<-model_plot_data(fit.global)
+points(plot.global,col='darkgreen',type='l')
+
+
+```
+
