@@ -42,26 +42,39 @@ determinar cuál es el modelo que tiene el mejor balance entre sesgo y varianza.
 CARGA DE LIBRERIAS
 ```{r}
 library(ISLR)
+library(MASS)
 library(dplyr)
 library(ggplot2)
 
+## Glimpse es para ver los datos de un df, solo que de forma vertical, es decir, una transpuesta.
 glimpse(Boston)
 
+
+```
+
+```{r}
 boston.reduce <-
  Boston %>%
   dplyr::select(lstat, medv)
 
+```
 
+
+```{r}
 ## Se utilizarán los datos de Boston
 know_data <- Boston %>% 
   dplyr::select(lstat,medv)
+```
 
-
+```{r}
 names(know_data)[1] <- "input"
 names(know_data)[2] <- "output"
-
 know_data.rows <- nrow(know_data)
+```
 
+
+
+```{r}
 
 get_boot <- function(x2){
   index<-sample(1:know_data.rows, 
@@ -71,8 +84,9 @@ get_boot <- function(x2){
   return(know_data[index,])
 }
 
+```
 
-  
+```{r}
 
 fit_lm <- function(dataset,degree=2){
   formula <- paste0("I(","input^",1:degree,")",collapse = '+')
@@ -81,6 +95,11 @@ fit_lm <- function(dataset,degree=2){
   return(fit)
 }
 
+```
+
+
+
+```{r}
 
 model_plot_data <- function(fit){
   xaxis<-
@@ -98,6 +117,10 @@ model_plot_data <- function(fit){
 }
 
 
+
+```
+
+```{r}
 nboots<-100
 boots <- lapply(1:nboots, get_boot)
 
@@ -128,7 +151,5 @@ points(mean_pred,type = 'l', col='red')
 fit.global<-fit_lm(know_data,40)
 plot.global<-model_plot_data(fit.global)
 points(plot.global,col='darkgreen',type='l')
-
-
 ```
 
